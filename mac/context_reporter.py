@@ -36,10 +36,19 @@ CFG = Path.home() / ".config" / "nimolo"
 STATE = CFG / "context-state.json"
 BRIDGE = (Path.home() / "Library" / "Application Support"
           / "EventKitBridge")
-# The bus binds furnace's tailnet address as well as the
-# LAN one; tailnet is the path that works wherever the Mac
-# is (the LAN address is unreachable off-Hearth).
-BUS = "http://100.105.48.36:7891/bus/publish"
+# The coordinator's bus endpoint. Point it at your own
+# coordinator: write the base URL to ~/.config/nimolo/bus-host
+# or set NIMOLO_BUS_URL. Defaults to a local coordinator.
+def _bus_base():
+    host_file = CFG / "bus-host"
+    if host_file.exists():
+        saved = host_file.read_text().strip()
+        if saved:
+            return saved
+    return os.environ.get("NIMOLO_BUS_URL", "http://127.0.0.1:7891")
+
+
+BUS = _bus_base() + "/bus/publish"
 
 CAL_TTL_S = 240        # refresh the calendar read at most this often
 CAL_STALE_S = 900      # reuse a failed read's cache up to this age

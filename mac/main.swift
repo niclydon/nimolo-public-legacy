@@ -5,7 +5,7 @@ import Foundation
 // Pets for Mac v2.3: a click-through overlay that hosts the
 // pet factory's cast on the MacBook screen. Third screen of
 // the pets platform, after Pane and Flint. Same contract as
-// the Flint renderer: the coordinator (pets-mcp on Furnace)
+// the Flint renderer: the coordinator (nimolo-mcp)
 // writes directive files into ~/.config/nimolo (pet-<name>:
 // event=, seq=, scale=) and this app only reads them; every
 // second it writes back pet-status (one line per pet:
@@ -383,13 +383,13 @@ final class PetView: NSView {
 
 // MARK: event bus client
 //
-// The realtime channel to pets-mcp on furnace (tailnet
-// 100.105.48.36:7891): publishes this screen's live state
+// The realtime channel to the coordinator (its base URL is
+// resolved at BusClient.base): publishes this screen's live state
 // once a second and holds an SSE subscription for intents,
 // which then arrive in milliseconds instead of on the next
 // file poll. Auth is a dedicated bus token in
 // ~/.config/nimolo/bus-token; the MCP origin secret never
-// leaves furnace. The file channel stays live underneath:
+// leaves the coordinator host. The file channel stays live underneath:
 // every directive is both written to a file and published,
 // seq dedupe makes whichever arrives second a no-op, and
 // if the bus is down the files carry on alone.
@@ -419,7 +419,19 @@ final class BusClient: NSObject, URLSessionDataDelegate {
         }
     }
 
-    static let base = "http://100.105.48.36:7891"
+    // The coordinator's base URL: ~/.config/nimolo/bus-host if
+    // present, else $NIMOLO_BUS_URL, else a local coordinator.
+    static let base: String = {
+        let cfg = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".config/nimolo/bus-host")
+        if let saved = try? String(contentsOf: cfg, encoding: .utf8) {
+            let trimmed = saved.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { return trimmed }
+        }
+        if let env = ProcessInfo.processInfo.environment["NIMOLO_BUS_URL"],
+           !env.isEmpty { return env }
+        return "http://127.0.0.1:7891"
+    }()
 
     private func request(_ path: String) -> URLRequest? {
         guard let token,

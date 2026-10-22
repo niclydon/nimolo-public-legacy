@@ -6,7 +6,7 @@
 	<string>io.niclydon.nimolo-dock</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Users/niclydon/Applications/Nimolo Dock.app/Contents/MacOS/Nimolo Dock</string>
+		<string>/Users/YOUR-USERNAME/Applications/Nimolo Dock.app/Contents/MacOS/Nimolo Dock</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
